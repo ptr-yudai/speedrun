@@ -1,7 +1,9 @@
 create table if not exists user (
     id text primary key,
     username text unique,
-    password text
+    password text,
+    is_runner integer default 0,
+    is_admin integer default 0
 );
 
 create table if not exists session (
@@ -9,21 +11,22 @@ create table if not exists session (
     session_id text primary key,
     expired_at integer,
 
-    FOREIGN KEY(user_id) REFERENCES user(id)
+    FOREIGN KEY(user_id) REFERENCES user(id) ON DELETE CASCADE
 );
 
-create table if not exists challenge (
+create table if not exists task (
     id text primary key,
-    is_open integer
+    is_open integer,
+    is_freezed integer default 0
 );
 
 create table if not exists attempt (
-    id text primary key,
     user_id text,
-    challenge_id text,
+    task_id text,
     start_at integer,
     finish_at integer,
 
-    FOREIGN KEY(user_id) REFERENCES user(id),
-    FOREIGN KEY(challenge_id) REFERENCES challenge(id)
+    PRIMARY KEY (user_id, task_id),
+    FOREIGN KEY(user_id) REFERENCES user(id) ON DELETE SET NULL,
+    FOREIGN KEY(task_id) REFERENCES task(id) ON DELETE SET NULL
 );

@@ -1,5 +1,8 @@
+# id必須にしてる。あとでsha256sumとるので一意になるならなんでもいい
+id: short film
 name: short film
+category: pwn
 description: |
   HTML is HERE
-category: pwn
+flag: SECCON{SPEEDRUN}
 author: ptr-yudai
