@@ -120,11 +120,25 @@ def new_session(user_id):
     )
     session["session_id"] = session_id
 
-def get_user_by_cred(username, password):
+def get_user_by_cred(username, password) -> Optional[User]:
     row = select(
         "select id, username, is_runner, is_admin from user where username = ? AND password = ?",
         username,
         h(password),
+    )
+    if row is None:
+        return None
+    return User(
+        id=row["id"],
+        username=row["username"],
+        is_runner=row["is_runner"] != 0,
+        is_admin=row["is_admin"] != 0,
+    )
+
+def get_user_by_id(user_id) -> Optional[User]:
+    row = select(
+        "select id, username, is_runner, is_admin from user where id = ?",
+        user_id
     )
     if row is None:
         return None
@@ -148,7 +162,6 @@ def get_usernames(userids) -> Dict[str, str]:
     return {u["id"]:u["username"] for u in usernames}
 
 # --- tasks
-
 tasks = {}
 def load_tasks():
     for path in glob.glob("./tasks/**/task.yml"):
@@ -171,21 +184,21 @@ def register_tasks():
     # どうせ大した件数はないのでbulk insert面倒だしやらない
     # insert or ignoreですでに存在するtask傷つけない
     for task in tasks.values():
-        execute("insert or ignore into task(id, is_open) values (?, ?)", task["id"], 0)
+        execute("insert or ignore into task(id, is_open) values (?, ?)", task.id, 0)
 
 def get_task_by_id(task_id) -> Optional[Task]:
     if task_id not in tasks:
         return None
 
     t = tasks[task_id]
-    row = select("select id, is_open, is_freezed from tasks where id = ?", t["id"])
+    row = select("select id, is_open, is_freezed from tasks where id = ?", t.id)
     if row is None:
         return None
     t.is_open = (row["is_open"] != 1)
     t.is_freezed = (row["is_freezed"] != 1)
     return t
 
-def get_task_solves(task_id) -> List[Attempt]:
+def get_task_solvers(task_id) -> List[Attempt]:
     solves_data = select_all(
         "select user_id, task_id, start_at, finish_at where task_id = ? and finish_at is not null",
         task_id,
@@ -200,8 +213,41 @@ def get_task_solves(task_id) -> List[Attempt]:
         ))
     return solves
 
-# --- attempt
+def get_user_solved_tasks(user_id) -> List[Attempt]:
+    solves_data = select_all(
+        "select user_id, task_id, start_at, finish_at where user_id = ? and finish_at is not null",
+        user_id,
+    )
+    solves = []
+    for s in solves_data:
+        solves.append(Attempt(
+            user_id=s["user_id"],
+            task_id=s["task_id"],
+            start_at=s["start_at"],
+            finish_at=s["finish_at"],
+        ))
+    return solves
 
+
+def update_task_status():
+    rows = select_all("select id, is_open, is_freezed from tasks")
+    for row in rows:
+        tasks[row["id"]].is_open = row["is_open"] != 1
+        tasks[row["id"]].is_freezed = row["is_freezed"] != 1
+
+def open_task(task_id):
+    execute("update task set is_open = 1 where and task_id = ?", task_id)
+
+def close_task(task_id):
+    execute("update task set is_open = 0 where and task_id = ?", task_id)
+
+def freeze_task(task_id):
+    execute("update task set is_freezed = 1 where and task_id = ?", task_id)
+
+def unfreeze_task(task_id):
+    execute("update task set is_freezed = 0 where and task_id = ?", task_id)
+
+# --- attempt
 def get_attempt(user_id, task_id):
     row = select("select user_id, task_id, start_at, finish_at from attempt where user_id = ? AND task_id = ?", user_id, task_id)
     if row is None:
@@ -232,10 +278,27 @@ def task_viewable(user_id, task: Task):
     return False
 
 # --- routes
-
 @app.route("/", methods=["GET"])
 def index():
     pass
+
+@app.route("/info", methods=["GET"])
+def info():
+    user_id = get_login_user_id()
+    if not user_id:
+        return jsonify({})
+    user = get_user_by_id(user_id)
+    if not user:
+        return
+
+    attempt = get_user_solved_tasks(user_id)
+    return jsonify({
+        "id": user.id,
+        "username": user.username,
+        "is_runner": user.is_runner,
+        "is_admin": user.is_admin,
+        "solved": [t.task_id for t in attempt],
+    })
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -274,6 +337,21 @@ def register():
         "is_admin": user.is_admin,
     })
 
+@app.route("/tasks", methods=["GET"])
+def list_tasks():
+    user_id = get_login_user_id()
+    if not user_id:
+        return "", 401
+
+    update_task_status()
+    ts = [ {
+        "id": task.id,
+        "name": task.name,
+        "category": task.category,
+        "description": task.description,
+    } for task in tasks.values() if task.is_open ]
+    return jsonify(ts), 200
+
 @app.route("/task/<tid>", methods=["GET"])
 def task(tid):
     task = get_task_by_id(tid)
@@ -288,7 +366,7 @@ def task(tid):
     if not task_viewable(user_id,task):
         return "", 403
 
-    solves = get_task_solves(task.id)
+    solves = get_task_solvers(task.id)
     usernames = get_usernames([s.user_id for s in solves])
 
     return jsonify({
@@ -346,8 +424,7 @@ def submit(tid):
     app.logger.info("user {} submit flag [{}]".format(user_id, flag))
 
     # TODO runnerが解いたときになんかする？
-
-    for t in tasks:
+    for t in tasks.values():
         if flag == t.flag:
             False
             return jsonify({
@@ -359,21 +436,77 @@ def submit(tid):
 
 
 @app.route("/admin/open/<tid>", methods=["POST"])
-def open_task(tid):
-    pass
+def admin_open_task(tid):
+    user_id = get_login_user_id()
+    if not user_id:
+        return "", 401
+    user = get_user_by_id(user_id)
+    if not user or not user.is_admin:
+        return "", 401
+
+    open_task(tid)
+    return ""
+
+@app.route("/admin/close/<tid>", methods=["POST"])
+def admin_close_task(tid):
+    user_id = get_login_user_id()
+    if not user_id:
+        return "", 401
+    user = get_user_by_id(user_id)
+    if not user or not user.is_admin:
+        return "", 401
+
+    close_task(tid)
+    return ""
 
 @app.route("/admin/freeze/<tid>", methods=["POST"])
-def freeze_task(tid):
-    pass
+def admin_freeze_task(tid):
+    user_id = get_login_user_id()
+    if not user_id:
+        return "", 401
+    user = get_user_by_id(user_id)
+    if not user or not user.is_admin:
+        return "", 401
+
+    freeze_task(tid)
+    return ""
+
+@app.route("/admin/unfreeze/<tid>", methods=["POST"])
+def admin_unfreeze_task(tid):
+    user_id = get_login_user_id()
+    if not user_id:
+        return "", 401
+    user = get_user_by_id(user_id)
+    if not user or not user.is_admin:
+        return "", 401
+
+    unfreeze_task(tid)
+    return ""
 
 @app.route("/admin/tasks", methods=["POST"])
-def list_tasks():
-    pass
+def admin_list_tasks():
+    user_id = get_login_user_id()
+    if not user_id:
+        return "", 401
+    user = get_user_by_id(user_id)
+    if not user or not user.is_admin:
+        return "", 401
+
+    update_task_status()
+    ts = [ {
+        "id": task.id,
+        "name": task.name,
+        "category": task.category,
+        "description": task.description,
+        "author": task.author,
+        "is_open": task.is_open,
+        "is_freezed": task.is_freezed,
+    } for task in tasks.values() ]
+    return jsonify(ts)
+
+
 
 if __name__ == "__main__":
-    # task読み込む
-    load_tasks()
-    register_tasks()
 
     # テーブル作る
     with open("./schema.sql") as f:
@@ -383,5 +516,9 @@ if __name__ == "__main__":
         cur.close()
         conn.commit()
         conn.close()
+
+    # task読み込む
+    load_tasks()
+    register_tasks()
 
     app.run(debug=True, port=5000, threaded=True)
