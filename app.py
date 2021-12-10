@@ -1,4 +1,4 @@
-from flask import Flask, session, jsonify, request
+from flask import Flask, session, jsonify, request, send_file
 from hashlib import sha256
 import sqlite3
 from datetime import datetime, timedelta
@@ -35,7 +35,7 @@ class Attempt:
     finish_at: Optional[int]
 
 
-app = Flask(__name__, static_url_path="")
+app = Flask(__name__, static_url_path="", static_folder="./frontend/dist")
 app.session_cookie_name = "speedrun"
 app.secret_key = "speedrun"
 app.config["JSON_AS_ASCII"] = False
@@ -69,6 +69,8 @@ def select(query, *args):
     try:
         cur.execute(query, args)
         return cur.fetchone()
+    except sqlite3.Error:
+        return None
     finally:
         cur.close()
         conn.close()
@@ -79,6 +81,8 @@ def select_all(query, *args):
     try:
         cur.execute(query, args)
         return cur.fetchall()
+    except sqlite3.Error:
+        return None
     finally:
         cur.close()
         conn.close()
@@ -89,11 +93,14 @@ def execute(query, *args):
     try:
         cur.execute(query, args)
         conn.commit()
-    except Exception as e:
-        raise e
+    except sqlite3.Error:
+        return None
     finally:
         cur.close()
         conn.close()
+
+def error(message):
+    return jsonify({"message": message})
 
 # --- user
 def h(password):
@@ -278,9 +285,10 @@ def task_viewable(user_id, task: Task):
     return False
 
 # --- routes
-@app.route("/", methods=["GET"])
+@app.route("/")
 def index():
-    pass
+    return send_file("frontend/dist/index.html")
+
 
 @app.route("/info", methods=["GET"])
 def info():
@@ -303,14 +311,15 @@ def info():
 @app.route("/login", methods=["POST"])
 def login():
     data = request.get_json() or {}
+    print(data)
     username = data.get("username", "")
     password = data.get("password", "")
     if not username or not password:
-        return "", 400
+        return error("username and password are required"), 400
 
     user = do_login(username, password)
     if user is None:
-        return "", 400
+        return error("login failed"), 400
     return jsonify({
         "id": user.id,
         "username": user.username,
@@ -324,12 +333,14 @@ def register():
     username = data.get("username", "")
     password = data.get("password", "")
     if not username or not password:
-        return "", 400
+        return error("username and password are required"), 400
 
+    # おもしろ情報
+    # うっかりユーザ名もパスワードも同じで登録しようとするとログインになる
     execute("INSERT INTO user(id, username, password) VALUES (?, ?, ?)", uuid(), username, h(password))
     user = do_login(username, password)
     if user is None:
-        return "", 400
+        return error("register failed"), 400
     return jsonify({
         "id": user.id,
         "username": user.username,
