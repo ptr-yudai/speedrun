@@ -8,6 +8,7 @@ import glob
 import yaml
 from dataclasses import dataclass
 from typing import Optional, List, Dict
+import traceback
 
 @dataclass
 class User:
@@ -82,7 +83,7 @@ def select_all(query, *args):
         cur.execute(query, args)
         return cur.fetchall()
     except sqlite3.Error:
-        return None
+        return []
     finally:
         cur.close()
         conn.close()
@@ -109,7 +110,7 @@ def h(password):
 def get_login_user_id() -> Optional[str]:
     session_id = session.get("session_id", 0)
     row = select(
-        "select user_id from session where session_id = ? AND expired_at < ?",
+        "select user_id from session where session_id = ? AND expired_at > ?",
         session_id,
         now(),
     )
@@ -164,9 +165,28 @@ def do_login(username, password):
     new_session(user.id)
     return user
 
-def get_usernames(userids) -> Dict[str, str]:
-    usernames = select_all("select id, username from user where id in ?", userids)
-    return {u["id"]:u["username"] for u in usernames}
+def get_users_by_ids(userids) -> Dict[str, User]:
+    rows = select_all(
+        "select id, username, is_runner, is_admin from user where id in ?",
+        userids,
+    )
+    return {row["id"]:User(
+        id=row["id"],
+        username=row["username"],
+        is_runner=row["is_runner"] != 0,
+        is_admin=row["is_admin"] != 0,
+    ) for row in rows}
+
+def get_all_users() -> Dict[str, User]:
+    rows = select_all(
+        "select id, username, is_runner, is_admin from user"
+    )
+    return {row["id"]:User(
+        id=row["id"],
+        username=row["username"],
+        is_runner=row["is_runner"] != 0,
+        is_admin=row["is_admin"] != 0,
+    ) for row in rows}
 
 # --- tasks
 tasks = {}
@@ -201,13 +221,13 @@ def get_task_by_id(task_id) -> Optional[Task]:
     row = select("select id, is_open, is_freezed from tasks where id = ?", t.id)
     if row is None:
         return None
-    t.is_open = (row["is_open"] != 1)
-    t.is_freezed = (row["is_freezed"] != 1)
+    t.is_open = (row["is_open"] != 0)
+    t.is_freezed = (row["is_freezed"] != 0)
     return t
 
 def get_task_solvers(task_id) -> List[Attempt]:
     solves_data = select_all(
-        "select user_id, task_id, start_at, finish_at where task_id = ? and finish_at is not null",
+        "select user_id, task_id, start_at, finish_at from attempt where task_id = ? and finish_at is not null",
         task_id,
     )
     solves = []
@@ -222,7 +242,7 @@ def get_task_solvers(task_id) -> List[Attempt]:
 
 def get_user_solved_tasks(user_id) -> List[Attempt]:
     solves_data = select_all(
-        "select user_id, task_id, start_at, finish_at where user_id = ? and finish_at is not null",
+        "select user_id, task_id, start_at, finish_at from attempt where user_id = ? and finish_at is not null",
         user_id,
     )
     solves = []
@@ -237,10 +257,10 @@ def get_user_solved_tasks(user_id) -> List[Attempt]:
 
 
 def update_task_status():
-    rows = select_all("select id, is_open, is_freezed from tasks")
+    rows = select_all("select id, is_open, is_freezed from task")
     for row in rows:
-        tasks[row["id"]].is_open = row["is_open"] != 1
-        tasks[row["id"]].is_freezed = row["is_freezed"] != 1
+        tasks[row["id"]].is_open = row["is_open"] != 0
+        tasks[row["id"]].is_freezed = row["is_freezed"] != 0
 
 def open_task(task_id):
     execute("update task set is_open = 1 where and task_id = ?", task_id)
@@ -265,6 +285,15 @@ def get_attempt(user_id, task_id):
         start_at=row["start_at"],
         finish_at=row["fnish_at"],
     )
+
+def get_user_attempts(user_id):
+    rows = select_all("select user_id, task_id, start_at, finish_at from attempt where user_id = ?", user_id)
+    return [Attempt(
+        user_id=row["user_id"],
+        task_id=row["task_id"],
+        start_at=row["start_at"],
+        finish_at=row["fnish_at"],
+    ) for row in rows]
 
 def start_attempt(user_id, task_id):
     execute("insert attempt(user_id, task_id, start_at) values (?, ?, ?)", user_id, task_id, now())
@@ -299,19 +328,18 @@ def info():
     if not user:
         return
 
-    attempt = get_user_solved_tasks(user_id)
+    attempts = get_user_attempts(user_id)
     return jsonify({
         "id": user.id,
         "username": user.username,
         "is_runner": user.is_runner,
         "is_admin": user.is_admin,
-        "solved": [t.task_id for t in attempt],
+        "attempts": attempts,
     })
 
 @app.route("/login", methods=["POST"])
 def login():
     data = request.get_json() or {}
-    print(data)
     username = data.get("username", "")
     password = data.get("password", "")
     if not username or not password:
@@ -320,12 +348,7 @@ def login():
     user = do_login(username, password)
     if user is None:
         return error("login failed"), 400
-    return jsonify({
-        "id": user.id,
-        "username": user.username,
-        "is_runner": user.is_runner,
-        "is_admin": user.is_admin,
-    })
+    return "", 200
 
 @app.route("/register", methods=["POST"])
 def register():
@@ -341,44 +364,50 @@ def register():
     user = do_login(username, password)
     if user is None:
         return error("register failed"), 400
-    return jsonify({
-        "id": user.id,
-        "username": user.username,
-        "is_runner": user.is_runner,
-        "is_admin": user.is_admin,
-    })
+    return "", 200
 
 @app.route("/tasks", methods=["GET"])
 def list_tasks():
-    user_id = get_login_user_id()
-    if not user_id:
-        return "", 401
-
     update_task_status()
-    ts = [ {
-        "id": task.id,
-        "name": task.name,
-        "category": task.category,
-        "description": task.description,
-    } for task in tasks.values() if task.is_open ]
+
+    ts = []
+    users = get_all_users()
+    for task in tasks.values():
+        if not task.is_open:
+            continue
+        solves = get_task_solvers(task.id)
+        ts.append({
+            "id": task.id,
+            "name": task.name,
+            "category": task.category,
+            "author": task.author,
+            "solves": [{
+                "user_id": s.user_id,
+                "username": users[s.user_id].username,
+                "is_runner": users[s.user_id].is_runner,
+                "start_at": s.start_at,
+                "finish_at": s.finish_at,
+            } for s in solves],
+        })
+
     return jsonify(ts), 200
 
 @app.route("/task/<tid>", methods=["GET"])
 def task(tid):
     task = get_task_by_id(tid)
     if task is None:
-        return "", 404
+        return "Not found", 404
     if not task.is_open:
-        return "", 404
+        return "Not found", 404
 
     user_id = get_login_user_id()
     if not user_id:
-        return "", 401
-    if not task_viewable(user_id,task):
-        return "", 403
+        return "Login required to see details", 401
 
     solves = get_task_solvers(task.id)
-    usernames = get_usernames([s.user_id for s in solves])
+    users = get_users_by_ids([s.user_id for s in solves])
+    if task_viewable(user_id,task):
+        return "clock is not started", 403
 
     return jsonify({
         "id": task.id,
@@ -388,7 +417,8 @@ def task(tid):
         "author": task.author,
         "solves": [{
             "user_id": s.user_id,
-            "username": usernames[s.user_id],
+            "username": users[s.user_id].username,
+            "is_runner": users[s.user_id].is_runner,
             "start_at": s.start_at,
             "finish_at": s.finish_at,
         } for s in solves],
@@ -417,33 +447,49 @@ def start_task(tid):
 
 @app.route("/task/<tid>/submit", methods=["POST"])
 def submit(tid):
+    flag = (request.get_json() or {"flag": ""}).get("flag", "").strip()
     task = get_task_by_id(tid)
     if task is None:
-        return "", 404
+        return error("not found"), 404
     if not task.is_open:
-        return "", 404
+        return error("not found"), 404
 
     user_id = get_login_user_id()
     if not user_id:
-        return "", 401
-    if not task_viewable(user_id, task):
-        return "", 403
+        return error("login required"), 401
 
-    flag = (request.get_json() or {"flag": ""}).get("flag", "").strip()
+    attempt = get_attempt(user_id, task.id)
+    if not attempt:
+        if not task.is_freezed:
+            return error("clock has not started"), 403
 
-    # あとでdiscordとかにしてもいいかもね
+        app.logger.info("user {} submit flag [{}]".format(user_id, flag))
+        # TODO runnerが解いたときになんかする？
+        for t in tasks.values():
+            if flag == t.flag:
+                return jsonify({
+                    "solved": True,
+                }), 200
+        return jsonify({
+            "solved": False,
+        }), 200
+
+    if attempt.finish_at is not None:
+        return error("you already solved"), 403
+
     app.logger.info("user {} submit flag [{}]".format(user_id, flag))
 
+    # あとでdiscordとかにしてもいいかもね
     # TODO runnerが解いたときになんかする？
     for t in tasks.values():
         if flag == t.flag:
-            False
+            finish_attempt(user_id, task.id)
             return jsonify({
                 "solved": True,
-            }), 400
+            }), 200
     return jsonify({
         "solved": False,
-    }), 400
+    }), 200
 
 
 @app.route("/admin/open/<tid>", methods=["POST"])
