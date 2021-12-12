@@ -606,20 +606,19 @@ def admin_list_tasks():
     return jsonify(ts)
 
 
+# 起動時に行う処理
+# テーブル作る
+with open("./schema.sql") as f:
+    conn = db()
+    cur = conn.cursor()
+    cur.executescript(f.read())
+    cur.close()
+    conn.commit()
+    conn.close()
+
+# task読み込む
+load_tasks()
+register_tasks()
 
 if __name__ == "__main__":
-
-    # テーブル作る
-    with open("./schema.sql") as f:
-        conn = db()
-        cur = conn.cursor()
-        cur.executescript(f.read())
-        cur.close()
-        conn.commit()
-        conn.close()
-
-    # task読み込む
-    load_tasks()
-    register_tasks()
-
     app.run(debug=True, port=5000, threaded=True)
