@@ -23,8 +23,8 @@ create table if not exists task (
 create table if not exists attempt (
     user_id text,
     task_id text,
-    start_at integer,
-    finish_at integer,
+    start_at real,
+    finish_at real,
 
     PRIMARY KEY (user_id, task_id),
     FOREIGN KEY(user_id) REFERENCES user(id) ON DELETE SET NULL,

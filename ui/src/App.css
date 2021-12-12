@@ -1,0 +1,153 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300&display=swap');
+* {
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+
+main {
+  display: flex;
+  font-size: 24px;
+}
+
+nav {
+  min-width: max-content;
+  min-height: 100vh;
+  border-right: 1px solid #0070F333;
+  overflow: hidden;
+}
+
+.view {
+  flex: 1;
+}
+
+.wrapper {
+  width: 768px;
+  margin: 20px auto;
+}
+
+.nav-item {
+  width: 100%;
+  padding-top: 0.25em;
+  padding-bottom: 0.25em;
+  padding-right: 2em;
+  padding-left: 1em;
+
+  position: relative;
+  overflow: hidden;
+}
+.nav-item a {
+  display: block;
+  width: 100%;
+  height: 100%;
+  text-decoration: none;
+  color: inherit;
+}
+.nav-item a:after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: -200%;
+  left: -25%;
+  width: 100%;
+  height: 500%;
+  background: #00000033;
+  border-radius: 100%;
+  opacity: 0;
+}
+@keyframes navhover {
+  0% {
+    transform: scale(0);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.1;
+  }
+}
+.nav-item a:hover:after {
+  animation: navhover 1s ease-out;
+}
+
+.nav-item.category {
+  font-weight: bold;
+}
+.nav-item.task {
+  padding-top: 0.1em;
+  padding-bottom: 0.1em;
+  padding-left: 2em;
+}
+
+
+
+.form-item {
+  margin-bottom: 1em;
+}
+
+input {
+  font-size: inherit; 
+}
+input[type=text],input[type=password] {
+  text-align: center;
+  border: none;
+  border-bottom: 1px solid #000000;
+  padding: 0.25rem 0.5rem;
+}
+input:focus {
+  outline: none;
+}
+
+/* https://getcssscan.com/css-buttons-examples */
+/* CSS */
+button {
+  align-items: center;
+  appearance: none;
+  background-color: #fff;
+  border: 1px solid #dbdbdb;
+  border-radius: .375em;
+  box-shadow: none;
+  box-sizing: border-box;
+  color: #363636;
+  cursor: pointer;
+  display: inline-flex;
+  font-family: BlinkMacSystemFont,-apple-system,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Fira Sans","Droid Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-size: 1rem;
+  height: 2.5em;
+  justify-content: center;
+  line-height: 1.5;
+  padding: calc(.5em - 1px) 1em;
+  position: relative;
+  text-align: center;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+button:active {
+  border-color: #4a4a4a;
+  outline: 0;
+}
+
+button:focus {
+  border-color: #485fc7;
+  outline: 0;
+}
+
+button:hover {
+  border-color: #b5b5b5;
+}
+
+button:focus:not(:active) {
+  box-shadow: rgba(72, 95, 199, .25) 0 0 0 .125em;
+}
+
+label {
+  display: block;
+  font-size: 75%;
+  font-weight: bold;
+}

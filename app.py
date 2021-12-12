@@ -1,14 +1,15 @@
-from flask import Flask, session, jsonify, request, send_file
+from flask import Flask, session, jsonify, request, send_file, Response
+from io import BytesIO
 from hashlib import sha256
 import sqlite3
 from datetime import datetime, timedelta
 from uuid import uuid4
-from os.path import dirname
+from pathlib import Path
+import tarfile
 import glob
 import yaml
 from dataclasses import dataclass
 from typing import Optional, List, Dict
-import traceback
 
 @dataclass
 class User:
@@ -23,6 +24,7 @@ class Task:
     name: str
     category: str
     description: str
+    attachment: Optional[BytesIO]
     author: str
     flag: str
     is_open: bool
@@ -36,7 +38,7 @@ class Attempt:
     finish_at: Optional[int]
 
 
-app = Flask(__name__, static_url_path="", static_folder="./frontend/dist")
+app = Flask(__name__, static_url_path="", static_folder="./ui/dist")
 app.session_cookie_name = "speedrun"
 app.secret_key = "speedrun"
 app.config["JSON_AS_ASCII"] = False
@@ -56,7 +58,7 @@ def db():
     return conn
 
 def now():
-    return int(datetime.now().timestamp())
+    return datetime.now().timestamp()
 
 def session_expire():
     return int((datetime.now() + timedelta(days=1)).timestamp())
@@ -95,6 +97,8 @@ def execute(query, *args):
         cur.execute(query, args)
         conn.commit()
     except sqlite3.Error:
+        import traceback
+        traceback.print_exc()
         return None
     finally:
         cur.close()
@@ -166,9 +170,10 @@ def do_login(username, password):
     return user
 
 def get_users_by_ids(userids) -> Dict[str, User]:
+    in_query = "(" + ",".join("?" for _ in userids) +  ")"
     rows = select_all(
-        "select id, username, is_runner, is_admin from user where id in ?",
-        userids,
+        "select id, username, is_runner, is_admin from user where id in " + in_query,
+        *userids,
     )
     return {row["id"]:User(
         id=row["id"],
@@ -191,16 +196,26 @@ def get_all_users() -> Dict[str, User]:
 # --- tasks
 tasks = {}
 def load_tasks():
-    for path in glob.glob("./tasks/**/task.yml"):
-        with open(path) as f:
+    for p in glob.glob("./tasks/**/task.yml"):
+        with open(p) as f:
             data = yaml.safe_load(f)
-        data["path"] = dirname(path)
+        path = Path(p)
+        data["path"] = path.parent.as_posix()
         data["id"] = sha256(data["id"].encode()).hexdigest()
+
+        distfiles = path.parent / "distfiles"
+        attachment = None
+        if distfiles.is_dir():
+            attachment = BytesIO()
+            with tarfile.open(fileobj=attachment, mode='w:gz') as t:
+                t.add(distfiles, arcname=data["name"], recursive=True)
+
         tasks[data["id"]] = Task(
             id=data["id"],
             name=data["name"],
             category=data["category"],
             description=data["description"],
+            attachment=attachment,
             flag=data["flag"],
             author=data["author"],
             is_open=False,
@@ -218,7 +233,7 @@ def get_task_by_id(task_id) -> Optional[Task]:
         return None
 
     t = tasks[task_id]
-    row = select("select id, is_open, is_freezed from tasks where id = ?", t.id)
+    row = select("select id, is_open, is_freezed from task where id = ?", task_id)
     if row is None:
         return None
     t.is_open = (row["is_open"] != 0)
@@ -263,16 +278,16 @@ def update_task_status():
         tasks[row["id"]].is_freezed = row["is_freezed"] != 0
 
 def open_task(task_id):
-    execute("update task set is_open = 1 where and task_id = ?", task_id)
+    execute("update task set is_open = 1 where id = ?", task_id)
 
 def close_task(task_id):
-    execute("update task set is_open = 0 where and task_id = ?", task_id)
+    execute("update task set is_open = 0 where id = ?", task_id)
 
 def freeze_task(task_id):
-    execute("update task set is_freezed = 1 where and task_id = ?", task_id)
+    execute("update task set is_freezed = 1 where id = ?", task_id)
 
 def unfreeze_task(task_id):
-    execute("update task set is_freezed = 0 where and task_id = ?", task_id)
+    execute("update task set is_freezed = 0 where id = ?", task_id)
 
 # --- attempt
 def get_attempt(user_id, task_id):
@@ -283,7 +298,7 @@ def get_attempt(user_id, task_id):
         user_id=row["user_id"],
         task_id=row["task_id"],
         start_at=row["start_at"],
-        finish_at=row["fnish_at"],
+        finish_at=row["finish_at"],
     )
 
 def get_user_attempts(user_id):
@@ -292,23 +307,22 @@ def get_user_attempts(user_id):
         user_id=row["user_id"],
         task_id=row["task_id"],
         start_at=row["start_at"],
-        finish_at=row["fnish_at"],
+        finish_at=row["finish_at"],
     ) for row in rows]
 
 def start_attempt(user_id, task_id):
-    execute("insert attempt(user_id, task_id, start_at) values (?, ?, ?)", user_id, task_id, now())
+    execute("insert into attempt(user_id, task_id, start_at) values (?, ?, ?)", user_id, task_id, now())
 
 def finish_attempt(user_id, task_id):
     execute("update attempt set finish_at = ? where user_id = ? and task_id = ?", now(), user_id, task_id)
 
 def task_viewable(user_id, task: Task):
-    """
-    おもむろにログイン状態の判定などをする
-    """
+    if not task.is_open:
+        return False
     if task.is_freezed:
         return True
 
-    attempt = get_attempt(task.id, user_id)
+    attempt = get_attempt(user_id, task.id)
     if attempt:
         return True
     return False
@@ -316,17 +330,18 @@ def task_viewable(user_id, task: Task):
 # --- routes
 @app.route("/")
 def index():
-    return send_file("frontend/dist/index.html")
+    return send_file("ui/dist/index.html")
 
 
 @app.route("/info", methods=["GET"])
 def info():
     user_id = get_login_user_id()
     if not user_id:
-        return jsonify({})
+        return jsonify(None)
+
     user = get_user_by_id(user_id)
     if not user:
-        return
+        return error("invalid user id"), 400
 
     attempts = get_user_attempts(user_id)
     return jsonify({
@@ -396,24 +411,19 @@ def list_tasks():
 def task(tid):
     task = get_task_by_id(tid)
     if task is None:
-        return "Not found", 404
+        return error("Not found"), 404
     if not task.is_open:
-        return "Not found", 404
-
-    user_id = get_login_user_id()
-    if not user_id:
-        return "Login required to see details", 401
+        return error("Not found"), 404
 
     solves = get_task_solvers(task.id)
     users = get_users_by_ids([s.user_id for s in solves])
-    if task_viewable(user_id,task):
-        return "clock is not started", 403
-
-    return jsonify({
+    data = {
         "id": task.id,
         "name": task.name,
         "category": task.category,
-        "description": task.description,
+        "description": None,
+        "is_freezed": task.is_freezed,
+        "has_attachment": task.attachment is not None,
         "author": task.author,
         "solves": [{
             "user_id": s.user_id,
@@ -422,28 +432,61 @@ def task(tid):
             "start_at": s.start_at,
             "finish_at": s.finish_at,
         } for s in solves],
-    })
+    }
+
+    # ログインしていないとuser_idはNoneだけど
+    # task_viewable, get_attemptはNoneも受け取れる
+    user_id = get_login_user_id()
+    print("DESCRIP", task_viewable(user_id, task))
+    if task_viewable(user_id, task):
+        data["description"] = task.description
+
+    return jsonify(data)
 
 @app.route("/task/<tid>/start", methods=["POST"])
 def start_task(tid):
     task = get_task_by_id(tid)
     if task is None:
-        return "", 404
+        return error("not found kokusin"), 404
     if not task.is_open:
-        return "", 404
+        return error("not found"), 404
 
     user_id = get_login_user_id()
     if user_id is None:
-        return "", 401
+        return error("login required"), 401
     if task.is_freezed:
-        return "", 403
+        return error("task freezed"), 403
 
     attempt = get_attempt(user_id, task.id)
     if attempt:
         # already started
-        return "", 403
+        return error("you already started to attempt"), 403
     start_attempt(user_id, task.id)
     return "", 200
+
+
+@app.route("/task/<tid>/attachment.tar.gz")
+def task_attachment(tid):
+    task = get_task_by_id(tid)
+    if task is None:
+        return error("not found"), 404
+    if not task.is_open:
+        return error("not found"), 404
+
+    user_id = get_login_user_id()
+    user = get_user_by_id(user_id)
+    if not user or not user.is_admin:
+        if not task_viewable(user_id, task):
+            return error("forbidden"), 403
+    if task.attachment is None:
+        return error("not found"), 403
+
+    buf = BytesIO(task.attachment.getvalue())
+    return send_file(
+        buf,
+        download_name=task.name + '.tar.gz',
+        mimetype='application/x-tar',
+    )
 
 @app.route("/task/<tid>/submit", methods=["POST"])
 def submit(tid):
@@ -540,14 +583,14 @@ def admin_unfreeze_task(tid):
     unfreeze_task(tid)
     return ""
 
-@app.route("/admin/tasks", methods=["POST"])
+@app.route("/admin/tasks")
 def admin_list_tasks():
     user_id = get_login_user_id()
     if not user_id:
-        return "", 401
+        return error("login required"), 401
     user = get_user_by_id(user_id)
     if not user or not user.is_admin:
-        return "", 401
+        return error("you are not an admin"), 401
 
     update_task_status()
     ts = [ {
@@ -555,6 +598,7 @@ def admin_list_tasks():
         "name": task.name,
         "category": task.category,
         "description": task.description,
+        "has_attachment": task.attachment is not None,
         "author": task.author,
         "is_open": task.is_open,
         "is_freezed": task.is_freezed,
