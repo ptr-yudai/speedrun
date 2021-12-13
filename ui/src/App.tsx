@@ -8,9 +8,10 @@ import { HashRouter, Routes, Route, Link } from "react-router-dom";
 import { useLogin, useTasks, Tasks } from "./lib/api";
 import { z } from "zod";
 import { ToastContainer } from 'react-toastify';
+import axios from "axios";
 
 function App() {
-  const { data: login } = useLogin();
+  const { data: login, mutate: mutateLogin } = useLogin();
   const { data: tasks } = useTasks();
 
   const tasksByCategories = (tasks: z.infer<typeof Tasks>) => {
@@ -40,6 +41,11 @@ function App() {
     });
   };
 
+  const logout = async () => {
+    await axios.post("/logout")
+    mutateLogin();
+  };
+
   return (
     <HashRouter>
       <main>
@@ -48,7 +54,12 @@ function App() {
             <Link to="/">RTACON</Link>
           </div>
           {login ? (
-            <div className="nav-item">{login.username}</div>
+            <>
+              <div className="nav-item">{login.username}</div>
+              <div className="nav-item">
+                <a href="#" onClick={() => logout()}>ログアウト</a>
+              </div>
+            </>
           ) : (
             <div className="nav-item">
               <Link to="/login">ログイン</Link>

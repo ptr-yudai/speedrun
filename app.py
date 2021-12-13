@@ -169,6 +169,9 @@ def do_login(username, password):
     new_session(user.id)
     return user
 
+def do_logout():
+    session.clear()
+
 def get_users_by_ids(userids) -> Dict[str, User]:
     in_query = "(" + ",".join("?" for _ in userids) +  ")"
     rows = select_all(
@@ -351,6 +354,11 @@ def info():
         "is_admin": user.is_admin,
         "attempts": attempts,
     })
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    do_logout()
+    return "", 200
 
 @app.route("/login", methods=["POST"])
 def login():

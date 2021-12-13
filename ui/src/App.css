@@ -23,6 +23,7 @@ nav {
 .wrapper {
   width: 768px;
   margin: 20px auto;
+  padding: 20px;
 }
 
 .nav-item {
@@ -92,59 +93,65 @@ input {
 }
 input[type=text],input[type=password] {
   text-align: center;
-  border: none;
-  border-bottom: 1px solid #000000;
+  border: 2px solid #bfbfbf;
+  border-radius: 4px;
   padding: 0.25rem 0.5rem;
 }
-input:focus {
+input:focus,input:active {
   outline: none;
+  border-color: #3f62d3;
+  box-shadow: 0 0 8px #73a6eb33;
 }
 
 /* https://getcssscan.com/css-buttons-examples */
 /* CSS */
 button {
-  align-items: center;
-  appearance: none;
-  background-color: #fff;
-  border: 1px solid #dbdbdb;
-  border-radius: .375em;
-  box-shadow: none;
-  box-sizing: border-box;
-  color: #363636;
-  cursor: pointer;
-  display: inline-flex;
-  font-family: BlinkMacSystemFont,-apple-system,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Fira Sans","Droid Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
-  font-size: 1rem;
   height: 2.5em;
   justify-content: center;
   line-height: 1.5;
   padding: calc(.5em - 1px) 1em;
+  background-color: #3f62d3;
+  color: #ffffff;
+  border: 2px solid #3f62d3;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.75em;
+  overflow: hidden;
   position: relative;
-  text-align: center;
-  user-select: none;
-  -webkit-user-select: none;
-  touch-action: manipulation;
-  vertical-align: top;
-  white-space: nowrap;
+}
+
+button:after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: -200%;
+  left: 0;
+  width: 100%;
+  height: 500%;
+  background: #00000033;
+  border-radius: 100%;
+  opacity: 0;
+  transform: scale(0);
 }
 
 button:active {
-  border-color: #4a4a4a;
   outline: 0;
+}
+button:active:after {
+  opacity: 0.7;
+  transform: scale(1);
+  transition: transform 0.2s ease-out;
 }
 
 button:focus {
-  border-color: #485fc7;
   outline: 0;
+  box-shadow: 0 0 4px #3f62d3;
 }
 
 button:hover {
-  border-color: #b5b5b5;
+  box-shadow: 0 0 4px #8b8b8b, 0 4px 8px #8b8b8ba6;
 }
 
-button:focus:not(:active) {
-  box-shadow: rgba(72, 95, 199, .25) 0 0 0 .125em;
-}
 
 label {
   display: block;
