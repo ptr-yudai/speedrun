@@ -53,7 +53,7 @@ def dict_factory(cursor, row):
     return d
 
 def db():
-    conn = sqlite3.connect("./database.sqlite")
+    conn = sqlite3.connect("./db/database.sqlite")
     conn.row_factory = dict_factory
     return conn
 

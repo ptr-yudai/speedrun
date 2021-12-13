@@ -5,6 +5,6 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - "./database.sqlite:/app/database.sqlite"
+      - "./db:/app/db"
       - "./tasks:/app/tasks:ro"
 

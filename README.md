@@ -12,7 +12,9 @@
 
 ## operation
 
-`docker-compose exec app sqlite3 database.sqlite` とかするとsqlite開けるのでそこからやると良い
+`docker-compose exec app sqlite3 ./db/database.sqlite` とかするとsqlite開けるのでそこからやると良い
+
+ローカルディレクトリに `./db/database.sqlite` があるのでそっちsudoで触ってもいい
 
 ### adminを作る
 
