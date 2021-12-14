@@ -2,7 +2,7 @@ import{ useParams } from "react-router-dom";
 import { useTask, useLogin, Login, Task as TaskSchema } from "../lib/api";
 import { z } from "zod";
 import { useInterval } from "usehooks-ts";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from 'react-toastify';
 
@@ -34,6 +34,11 @@ const TaskImpl = ({ id }: TaskImplProps) => {
   const attempt = login ? getAttempt(id, login) : undefined;
   const [ currentTime, setCurrentTime ] = useState("");
   const [ flag, setFlag ] = useState("");
+
+  useEffect(() => {
+    setFlag("");
+  }, [ id ]);
+
   const canSubmit = (task && (
     (task.is_freezed === true) || attempt !== undefined
   ))
@@ -53,6 +58,7 @@ const TaskImpl = ({ id }: TaskImplProps) => {
   const startAttempt = async () => {
     await axios.post(`/task/${id}/start`)
     toast.info("You started to attempt!");
+    updateTask();
     updateLogin();
   }
 
@@ -78,7 +84,7 @@ const TaskImpl = ({ id }: TaskImplProps) => {
   }, 10)
 
   if (error) {
-    return <>{JSON.stringify(error)}</>;
+    return <>...</>;
   }
   if (!task) {
     return <>Not Found</>;
