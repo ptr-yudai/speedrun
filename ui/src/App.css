@@ -162,3 +162,8 @@ label {
   font-size: 75%;
   font-weight: bold;
 }
+
+.ranking {
+  width: 100%;
+  display: block;
+}

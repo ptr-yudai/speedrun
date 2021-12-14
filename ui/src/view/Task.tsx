@@ -91,7 +91,7 @@ const TaskImpl = ({ id }: TaskImplProps) => {
   }
 
   return (
-    <div className="wrapper">
+    <>
       <h2>{task.name}</h2>
       <div>{task.category}</div>
 
@@ -131,7 +131,7 @@ const TaskImpl = ({ id }: TaskImplProps) => {
 
       <div>
         <h3>Speedrun Ranking</h3>
-        <table>
+        <table className="ranking">
           <thead>
             <tr>
               <th>Rank</th>
@@ -151,7 +151,7 @@ const TaskImpl = ({ id }: TaskImplProps) => {
         </table>
       </div>
 
-    </div>
+    </>
   );
 }
 
