@@ -10,7 +10,9 @@ main {
 }
 
 nav {
-  min-width: max-content;
+  min-width: 160px;
+  width: max-content;
+  max-width: 240px;
   min-height: 100vh;
   border-right: 1px solid #0070F333;
   overflow: hidden;
@@ -33,6 +35,7 @@ nav {
   padding-right: 2em;
   padding-left: 1em;
 
+  text-overflow: ellipsis;
   position: relative;
   overflow: hidden;
 }
@@ -96,6 +99,7 @@ input[type=text],input[type=password] {
   border: 2px solid #bfbfbf;
   border-radius: 4px;
   padding: 0.25rem 0.5rem;
+  vertical-align: middle;
 }
 input:focus,input:active {
   outline: none;
@@ -106,7 +110,7 @@ input:focus,input:active {
 /* https://getcssscan.com/css-buttons-examples */
 /* CSS */
 button {
-  height: 2.5em;
+  vertical-align: middle;
   justify-content: center;
   line-height: 1.5;
   padding: calc(.5em - 1px) 1em;

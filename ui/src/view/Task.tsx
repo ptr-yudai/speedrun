@@ -116,7 +116,7 @@ const TaskImpl = ({ id }: TaskImplProps) => {
       ) : (
         <>
           {(login && !task.is_freezed) && (
-            <button onClick={() => startAttempt()}>Start</button>
+            <button onClick={() => window.confirm("Ready to run?") && startAttempt()}>Start</button>
           )}
         </>
       )}
@@ -124,7 +124,7 @@ const TaskImpl = ({ id }: TaskImplProps) => {
       {canSubmit && (
         <form onSubmit={() => submit()}>
           <input type="text" value={flag} onChange={(e) => setFlag(e.target.value)} placeholder="RTACON{...}" />
-          <button>Submit</button>
+          <button style={{marginLeft: '1em'}}>Submit</button>
         </form>
       )}
 

@@ -76,12 +76,12 @@ const AdminTasks = () => {
             </td>
 
             <td>
-              {task.is_open ? "OPENED" : "CLOSED"}
+              OPENED
               <input type="checkbox" checked={task.is_open} onChange={() => toggleOpen(task.id)} />
             </td>
 
             <td>
-              {task.is_freezed ? "FREEZED" : "TRYABLE"}
+              TRYABLE
               <input type="checkbox" checked={!task.is_freezed} onChange={() => toggleFreeze(task.id)} />
             </td>
           </tr>

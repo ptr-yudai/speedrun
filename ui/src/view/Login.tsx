@@ -17,7 +17,7 @@ const Login = () => {
         password,
       });
       toast.success("logged in");
-      mutate();
+      await mutate();
       navigate("/");
     } catch {}
   };
@@ -29,7 +29,7 @@ const Login = () => {
         password,
       });
       toast.success("registered and logged in");
-      mutate();
+      await mutate();
       navigate("/");
     } catch {}
   };
@@ -59,7 +59,7 @@ const Login = () => {
 
       <div>
         <button onClick={() => doLogin()}>ログイン</button>
-        <button onClick={() => doRegister()}>登録</button>
+        <button style={{marginLeft: '1em', display: 'inline-block'}} onClick={() => doRegister()}>登録</button>
       </div>
     </form>
   );
