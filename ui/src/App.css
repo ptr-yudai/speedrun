@@ -35,9 +35,10 @@ nav {
   padding-right: 2em;
   padding-left: 1em;
 
+  overflow: hidden;
+  white-space: nowrap;
   text-overflow: ellipsis;
   position: relative;
-  overflow: hidden;
 }
 .nav-item a {
   display: block;

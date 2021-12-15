@@ -380,7 +380,7 @@ def register():
     password = data.get("password", "")
     if not username or not password:
         return error("username and password are required"), 400
-    if len(username) >= 32:
+    if len(username) >= 20:
         return error("username is too long"), 400
 
     # おもしろ情報

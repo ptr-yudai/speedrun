@@ -17,8 +17,8 @@ const Login = () => {
         password,
       });
       toast.success("logged in");
-      await mutate();
       navigate("/");
+      mutate();
     } catch {}
   };
 
@@ -29,8 +29,8 @@ const Login = () => {
         password,
       });
       toast.success("registered and logged in");
-      await mutate();
       navigate("/");
+      mutate();
     } catch {}
   };
 
