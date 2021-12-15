@@ -141,10 +141,10 @@ const TaskImpl = ({ id }: TaskImplProps) => {
           </thead>
           <tbody>
             {orderByTime(task.solves).map((solve, idx) => (
-              <tr key={solve.user_id}>
-                <td>{idx + 1}</td>
-                <td>{solve.username}</td>
-                <td>{(solve.finish_at - solve.start_at).toFixed(2)} sec</td>
+              <tr key={solve.user_id} className={(login && solve.user_id === login.id) ? 'login_player' : ''}>
+                <td className="rank">{(idx === 0) ? '👑' : (idx + 1)}</td>
+                <td> {solve.username}</td>
+                <td className="sec">{solve.is_runner && '🏃'}{(solve.finish_at - solve.start_at).toFixed(2)} sec</td>
               </tr>
             ))}
           </tbody>

@@ -23,7 +23,8 @@ nav {
 }
 
 .wrapper {
-  width: 768px;
+  max-width: 768px;
+  width: fit-content;
   margin: 20px auto;
   padding: 20px;
 }
@@ -166,5 +167,29 @@ label {
 
 .ranking {
   width: 100%;
-  display: block;
+  border-collapse: separate; 
+  border-spacing: 0;
+}
+
+.rank {
+  text-align: center;
+}
+
+.sec {
+  text-align: right;
+}
+
+.login_player {
+  box-shadow: 0 0 4px #3f62d3;
+  border-radius: 4px;
+}
+td:first-child {
+  padding-left: 1em;
+}
+td:last-child {
+  padding-right: 1em;
+}
+td {
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
 }
