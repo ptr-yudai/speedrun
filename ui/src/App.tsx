@@ -51,7 +51,7 @@ function App() {
       <main>
         <nav>
           <div className="nav-item">
-            <Link to="/">RTACON</Link>
+            <Link to="/">RTACTF</Link>
           </div>
           {login ? (
             <>
