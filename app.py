@@ -1,4 +1,4 @@
-from flask import Flask, session, jsonify, request, send_file, Response
+from flask import Flask, session, jsonify, request, send_file
 from io import BytesIO
 from hashlib import sha256
 import sqlite3
@@ -10,6 +10,7 @@ import glob
 import yaml
 from dataclasses import dataclass
 from typing import Optional, List, Dict
+import re
 
 @dataclass
 class User:
@@ -108,6 +109,12 @@ def error(message):
     return jsonify({"message": message})
 
 # --- user
+def validate_username(username):
+    res = re.search(r'(\p{Zl}|\p{Zp}|\p{Zs})', username)
+    if res is None:
+        return True
+    return False
+
 def h(password):
     return sha256(password.encode()).hexdigest()
 
@@ -378,6 +385,10 @@ def register():
     data = request.get_json() or {}
     username = data.get("username", "")
     password = data.get("password", "")
+
+    username = username.strip()
+    if not validate_username(username):
+        return error("invalid username"), 400
     if not username or not password:
         return error("username and password are required"), 400
     if len(username) >= 20:
