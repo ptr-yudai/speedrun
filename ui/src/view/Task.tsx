@@ -122,7 +122,7 @@ const TaskImpl = ({ id }: TaskImplProps) => {
       )}
 
       {canSubmit && (
-        <form onSubmit={() => submit()}>
+        <form onSubmit={() => submit()} className="submitForm">
           <input type="text" value={flag} onChange={(e) => setFlag(e.target.value)} placeholder="RTACON{...}" />
           <button style={{marginLeft: '1em'}}>Submit</button>
         </form>

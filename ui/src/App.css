@@ -29,6 +29,10 @@ nav {
   padding: 20px;
 }
 
+nav {
+  padding-top: 20px;
+}
+
 .nav-item {
   width: 100%;
   padding-top: 0.25em;
@@ -40,6 +44,10 @@ nav {
   white-space: nowrap;
   text-overflow: ellipsis;
   position: relative;
+}
+.nav-item-logo {
+  height: 1.5em;
+  vertical-align: middle;
 }
 .nav-item a {
   display: block;
@@ -86,8 +94,6 @@ nav {
   padding-bottom: 0.1em;
   padding-left: 2em;
 }
-
-
 
 .form-item {
   margin-bottom: 1em;
@@ -158,6 +164,10 @@ button:hover {
   box-shadow: 0 0 4px #8b8b8b, 0 4px 8px #8b8b8ba6;
 }
 
+.submitForm {
+  width: 100%;
+  display: flex;
+}
 
 label {
   display: block;
@@ -166,7 +176,8 @@ label {
 }
 
 .ranking {
-  width: 100%;
+  width: 24em;
+  margin: 0 auto;
   border-collapse: separate; 
   border-spacing: 0;
 }
@@ -180,16 +191,12 @@ label {
 }
 
 .login_player {
-  box-shadow: 0 0 4px #3f62d3;
-  border-radius: 4px;
+  background-color: #bfbfbf33;
 }
+
 td:first-child {
   padding-left: 1em;
 }
 td:last-child {
   padding-right: 1em;
-}
-td {
-  padding-top: 0.5em;
-  padding-bottom: 0.5em;
 }

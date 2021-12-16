@@ -9,6 +9,7 @@ import { useLogin, useTasks, Tasks } from "./lib/api";
 import { z } from "zod";
 import { ToastContainer } from 'react-toastify';
 import axios from "axios";
+import logoURL from "./assets/image.png";
 
 function App() {
   const { data: login, mutate: mutateLogin } = useLogin();
@@ -51,7 +52,9 @@ function App() {
       <main>
         <nav>
           <div className="nav-item">
-            <Link to="/">RTACTF</Link>
+            <Link to="/">
+              <img src={logoURL} className="nav-item-logo" />
+            </Link>
           </div>
           {login ? (
             <>
