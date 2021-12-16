@@ -92,7 +92,7 @@ const TaskImpl = ({ id }: TaskImplProps) => {
 
   return (
     <>
-      <h2>{task.name}</h2>
+      <h2>{attempt && attempt.finish_at && '🏳'} {task.name}</h2>
       <div>{task.category}</div>
 
       {task.description && (

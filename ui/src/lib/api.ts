@@ -85,3 +85,18 @@ export const useAdminTasks = () => {
     return AdminTasks.parse(res.data);
   })
 }
+
+export const Users = z.array(z.object({
+  id: z.string(),
+  username: z.string(),
+  is_runner: z.boolean(),
+  is_admin: z.boolean(),
+}))
+
+export const useUsers = () => {
+  return useSWR('/admin/users', async () => {
+    const res = await axios.get('/admin/users')
+    return Users.parse(res.data);
+  })
+}
+

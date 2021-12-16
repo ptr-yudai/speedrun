@@ -10,7 +10,7 @@ import glob
 import yaml
 from dataclasses import dataclass
 from typing import Optional, List, Dict
-import re
+import regex
 
 @dataclass
 class User:
@@ -110,7 +110,7 @@ def error(message):
 
 # --- user
 def validate_username(username):
-    res = re.search(r'(\p{Zl}|\p{Zp}|\p{Zs})', username)
+    res = regex.search(r'(\p{Zl}|\p{Zp}|\p{Zs})', username)
     if res is None:
         return True
     return False
@@ -626,6 +626,44 @@ def admin_list_tasks():
     } for task in tasks.values() ]
     return jsonify(ts)
 
+@app.route("/admin/users", methods=["GET"])
+def admin_list_users():
+    user_id = get_login_user_id()
+    if not user_id:
+        return error("login required"), 401
+    user = get_user_by_id(user_id)
+    if not user or not user.is_admin:
+        return error("you are not an admin"), 401
+
+    users = list(get_all_users().values())
+    return jsonify(users)
+
+@app.route("/admin/user/<uid>/make_runner", methods=["POST"])
+def admin_make_runner(uid):
+    user_id = get_login_user_id()
+    if not user_id:
+        return error("login required"), 401
+    user = get_user_by_id(user_id)
+    if not user or not user.is_admin:
+        return error("you are not an admin"), 401
+
+    # 面倒になった
+    execute("update user set is_runner = 1 where id = ?", uid)
+    return ""
+
+@app.route("/admin/user/<uid>/make_not_runner", methods=["POST"])
+def admin_make_not_runner(uid):
+    user_id = get_login_user_id()
+    if not user_id:
+        return error("login required"), 401
+    user = get_user_by_id(user_id)
+    if not user or not user.is_admin:
+        return error("you are not an admin"), 401
+
+    execute("update user set is_runner = 0 where id = ?", uid)
+    return ""
+
+# ---
 
 # 起動時に行う処理
 # テーブル作る

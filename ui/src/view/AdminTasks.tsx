@@ -1,46 +1,38 @@
+import { z } from "zod";
+import { AdminTasks as AdminTasksSchema } from "../lib/api";
 import { useAdminTasks, useTasks } from "../lib/api";
 import axios from "axios";
+
+type Task = typeof AdminTasksSchema.element;
+type TaskType = z.infer<Task>;
 
 const AdminTasks = () => {
   const { data, mutate } = useAdminTasks();
   const { mutate: taskMutate } = useTasks();
 
-  const toggleOpen = async (id: string) => {
-    if (!data) {
-      return;
-    }
-    for (const task of data) {
-      if (task.id === id) {
-        if (task.is_open) {
-          await axios.post(`/admin/close/${id}`);
-          mutate();
-          taskMutate();
-        } else {
-          await axios.post(`/admin/open/${id}`);
-          mutate();
-          taskMutate();
-        }
-        break;
-      }
+  const toggleOpen = async (task: TaskType) => {
+    if (task.is_open) {
+      await axios.post(`/admin/close/${task.id}`);
+      mutate();
+      taskMutate();
+    } else {
+      await axios.post(`/admin/open/${task.id}`);
+      mutate();
+      taskMutate();
     }
   }
 
-  const toggleFreeze = async (id: string) => {
+  const toggleFreeze = async (task: TaskType) => {
     if (!data) {
       return;
     }
-    for (const task of data) {
-      if (task.id === id) {
-        if (task.is_freezed) {
-          await axios.post(`/admin/unfreeze/${id}`);
-          mutate();
-          taskMutate();
-        } else {
-          await axios.post(`/admin/freeze/${id}`);
-          mutate();
-        }
-        break;
-      }
+    if (task.is_freezed) {
+      await axios.post(`/admin/unfreeze/${task.id}`);
+      mutate();
+      taskMutate();
+    } else {
+      await axios.post(`/admin/freeze/${task.id}`);
+      mutate();
     }
   }
 
@@ -77,12 +69,12 @@ const AdminTasks = () => {
 
             <td>
               OPENED
-              <input type="checkbox" checked={task.is_open} onChange={() => toggleOpen(task.id)} />
+              <input type="checkbox" checked={task.is_open} onChange={() => toggleOpen(task)} />
             </td>
 
             <td>
               TRYABLE
-              <input type="checkbox" checked={!task.is_freezed} onChange={() => toggleFreeze(task.id)} />
+              <input type="checkbox" checked={!task.is_freezed} onChange={() => toggleFreeze(task)} />
             </td>
           </tr>
         ))}

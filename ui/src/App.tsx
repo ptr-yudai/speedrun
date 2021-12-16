@@ -4,6 +4,7 @@ import Index from "./view/Index";
 import Login from "./view/Login";
 import Task from "./view/Task";
 import AdminTasks from "./view/AdminTasks";
+import AdminUsers from "./view/AdminUsers";
 import { HashRouter, Routes, Route, Link } from "react-router-dom";
 import { useLogin, useTasks, Tasks } from "./lib/api";
 import { z } from "zod";
@@ -82,7 +83,10 @@ function App() {
                 <div className="nav-item category">{xs.category}</div>
                 {xs.tasks.map((t) => (
                   <div className="nav-item task" key={t.id}>
-                    <Link to={`/task/${t.id}`}>{t.name}</Link>
+                    <Link to={`/task/${t.id}`}>
+                      {(login && login.attempts.filter(a => a.task_id === t.id && a.finish_at !== null).length === 1) && '🏳'}
+                      {t.name}
+                    </Link>
                   </div>
                 ))}
               </div>
@@ -97,6 +101,7 @@ function App() {
               <Route path="/task/:id" element={<Task />} />
 
               <Route path="/admin/tasks" element={<AdminTasks />} />
+              <Route path="/admin/users" element={<AdminUsers />} />
             </Routes>
           </div>
         </div>
