@@ -40,7 +40,6 @@ const Login = () => {
         <label>ユーザ名</label>
         <input
           type="text"
-          placeholder="kurenaif"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           required
