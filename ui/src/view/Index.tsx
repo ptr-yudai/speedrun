@@ -48,8 +48,13 @@ const Index = () => {
       <section>
         <h2>配信</h2>
         <p>12月19日（日） 15:40(JST) 〜</p>
-        <div>
-          <iframe width="560" height="315" src="https://www.youtube.com/embed/VXaROnAmAiY" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+        <div style={{display: "flex", justifyContent: "space-around", flexWrap: "wrap"}}>
+          <div style={{margin: "0 20px"}}>
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/VXaROnAmAiY" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+          </div>
+          <div style={{margin: "0 20px"}}>
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/tDkNKz0qMW4" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+          </div>
         </div>
       </section>
 
