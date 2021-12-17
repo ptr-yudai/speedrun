@@ -200,3 +200,26 @@ td:first-child {
 td:last-child {
   padding-right: 1em;
 }
+
+.admin-flex {
+  display:  flex;
+  justify-content: space-around;
+  margin-top: 20px;
+}
+
+.admin {
+  padding: 1em;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.admin-description {
+  font-weight: bold;
+  text-align: center;
+  margin: 0;
+}
+.admin-icon {
+  width: 8rem;
+  border-radius: 50%;
+}
