@@ -3,5 +3,6 @@ name: long film
 category: crypto
 description: |
   HTML is HERE
+est: 300
 flag: SECCON{SPEEDRUN}
 author: ptr-yudai

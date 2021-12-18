@@ -27,6 +27,7 @@ class Task:
     description: str
     attachment: Optional[BytesIO]
     author: str
+    est: int
     flag: str
     is_open: bool
     is_freezed: bool
@@ -227,6 +228,7 @@ def load_tasks():
             description=data["description"],
             attachment=attachment,
             flag=data["flag"],
+            est=data["est"],
             author=data["author"],
             is_open=False,
             is_freezed=False
@@ -443,6 +445,7 @@ def task(tid):
         "name": task.name,
         "category": task.category,
         "description": None,
+        "est": task.est,
         "is_freezed": task.is_freezed,
         "has_attachment": task.attachment is not None,
         "author": task.author,

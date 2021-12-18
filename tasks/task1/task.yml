@@ -4,5 +4,6 @@ name: short film
 category: pwn
 description: |
   HTML is HERE
+est: 600
 flag: SECCON{SPEEDRUN}
 author: ptr-yudai

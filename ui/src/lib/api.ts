@@ -50,6 +50,7 @@ export const Task = z.object({
   category: z.string(),
   description: z.string().nullable(),
   is_freezed: z.boolean(),
+  est: z.number(),
   has_attachment: z.boolean(),
   author: z.string(),
   solves: z.array(z.object({
