@@ -419,6 +419,7 @@ def list_tasks():
             "name": task.name,
             "category": task.category,
             "author": task.author,
+            "est": task.est,
             "solves": [{
                 "user_id": s.user_id,
                 "username": users[s.user_id].username,
