@@ -1,0 +1,12 @@
+# id必須にしてる。あとでsha256sumとるので一意になるならなんでもいい
+id: welcome
+name: welcome
+category: welcome
+description: |
+   <p>
+   Welcome to the RTACON - SECCON Speedrun Challenge
+   <pre>RTACON{stay_tuned_for_ptr-yudai's challenge}</pre>
+   </p>
+est: 30
+flag: "RTACON{stay_tuned_for_ptr-yudai's challenge}"
+author: RTACON
