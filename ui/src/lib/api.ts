@@ -28,6 +28,7 @@ export const Tasks = z.array(z.object({
   name: z.string(),
   category: z.string(),
   author: z.string(),
+  est: z.number(),
   solves: z.array(z.object({
     user_id: z.string(),
     username: z.string(),
