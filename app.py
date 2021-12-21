@@ -533,11 +533,10 @@ def submit(tid):
 
         app.logger.info("user {} submit flag [{}]".format(user_id, flag))
         # TODO runnerが解いたときになんかする？
-        for t in tasks.values():
-            if flag == t.flag:
-                return jsonify({
-                    "solved": True,
-                }), 200
+        if flag == task.flag:
+            return jsonify({
+                "solved": True,
+            }), 200
         return jsonify({
             "solved": False,
         }), 200
@@ -549,12 +548,11 @@ def submit(tid):
 
     # あとでdiscordとかにしてもいいかもね
     # TODO runnerが解いたときになんかする？
-    for t in tasks.values():
-        if flag == t.flag:
-            finish_attempt(user_id, task.id)
-            return jsonify({
-                "solved": True,
-            }), 200
+    if flag == task.flag:
+        finish_attempt(user_id, task.id)
+        return jsonify({
+            "solved": True,
+        }), 200
     return jsonify({
         "solved": False,
     }), 200
