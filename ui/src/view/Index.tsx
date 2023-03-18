@@ -3,7 +3,6 @@ import rekkusuURL from "../assets/rekkusu.png";
 import ptrYudaiURL from "../assets/ptr-yudai.jpeg";
 import keymoonURL from "../assets/keymoon.jpg";
 import moratorium08URL from "../assets/moratorium08.png";
-import theoremoonURL from "../assets/theoldmoon0602.png";
 import y011d4 from "../assets/y011d4.jpeg";
 
 const Index = () => {
@@ -26,11 +25,6 @@ const Index = () => {
 
                     <a href="https://twitter.com/fwarashi" className="admin">
                         <img src={kureanifURL} className="admin-icon" />
-                        <p className="admin-description">crypto走者</p>
-                    </a>
-
-                    <a href="https://twitter.com/theoremoon" className="admin">
-                        <img src={theoremoonURL} className="admin-icon" />
                         <p className="admin-description">crypto走者</p>
                     </a>
 
