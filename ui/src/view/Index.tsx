@@ -47,7 +47,7 @@ const Index = () => {
 
             <section>
                 <h2>配信 / Streaming</h2>
-                <p>2023年3月21日（日） 15:00(JST) 〜</p>
+                <p>2023年3月21日（火・祝） 15:00(JST) 〜</p>
                 <div style={{display: "flex", justifyContent: "space-around", flexWrap: "wrap"}}>
                     <a href="https://rtactf.connpass.com/event/278344/" target="_blank">RTACTF 2023 春 - connpass</a><br/>
                     <div style={{margin: "0 20px"}}>
