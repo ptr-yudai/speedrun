@@ -46,7 +46,7 @@ nav {
   position: relative;
 }
 .nav-item-logo {
-  height: 1.5em;
+  width: 4em;
   vertical-align: middle;
 }
 .nav-item a {

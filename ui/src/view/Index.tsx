@@ -47,13 +47,11 @@ const Index = () => {
 
             <section>
                 <h2>配信 / Streaming</h2>
-                <p>2023年3月21日（日） 14:00(JST) 〜</p>
+                <p>2023年3月21日（日） 15:00(JST) 〜</p>
                 <div style={{display: "flex", justifyContent: "space-around", flexWrap: "wrap"}}>
+                    <a href="https://rtactf.connpass.com/event/278344/" target="_blank">RTACTF 2023 春 - connpass</a><br/>
                     <div style={{margin: "0 20px"}}>
-                        <iframe width="560" height="315" src="https://www.youtube.com/embed/VXaROnAmAiY" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
-                    </div>
-                    <div style={{margin: "0 20px"}}>
-                        <iframe width="560" height="315" src="https://www.youtube.com/embed/tDkNKz0qMW4" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+                        <iframe width="560" height="315" src="https://www.youtube.com/embed/c8Q5yB3w5Og" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
                     </div>
                 </div>
             </section>

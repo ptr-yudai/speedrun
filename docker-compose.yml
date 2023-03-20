@@ -3,7 +3,7 @@ services:
   app:
     build: .
     ports:
-      - "80:5000"
+      - "5000:5000"
     volumes:
       - "./db:/app/db"
       - "./tasks:/app/tasks:ro"
